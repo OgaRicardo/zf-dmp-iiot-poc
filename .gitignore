@@ -13,3 +13,7 @@ Thumbs.db
 
 # Dados temporários ou senhas (se houver)
 *.log
+
+# Bancos de Dados e Volumes do Docker
+influx-data/
+grafana-data/

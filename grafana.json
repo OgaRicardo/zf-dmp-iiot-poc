@@ -1,0 +1,108 @@
+{
+  "title": "ZF CNC Executive Dashboard - Completo",
+  "editable": true,
+  "schemaVersion": 38,
+  "timezone": "browser",
+  "refresh": "5s",
+  "panels": [
+    {
+      "type": "gauge",
+      "title": "Spindle RPM",
+      "gridPos": { "x": 0, "y": 0, "w": 8, "h": 7 },
+      "targets": [
+        { "query": "from(bucket: \"cnc\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r[\"_measurement\"] == \"cnc_telemetry\") |> filter(fn: (r) => r[\"_field\"] == \"spindle_rpm\") |> last()", "refId": "A" }
+      ],
+      "fieldConfig": { "defaults": { "min": 0, "max": 5000, "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "#EAB308", "value": 2500 }, { "color": "red", "value": 4000 } ] } } },
+      "options": { "reduceOptions": { "calcs": ["last"], "fields": "" } }
+    },
+    {
+      "type": "stat",
+      "title": "STATUS DA MÁQUINA",
+      "gridPos": { "x": 8, "y": 0, "w": 8, "h": 7 },
+      "targets": [
+        { "query": "from(bucket: \"cnc\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r[\"_measurement\"] == \"cnc_telemetry\") |> filter(fn: (r) => r[\"_field\"] == \"status\") |> last()", "refId": "A" }
+      ],
+      "fieldConfig": { "defaults": { "mappings": [ { "type": "value", "options": { "RUNNING": { "color": "green", "index": 0 }, "WARNING": { "color": "red", "index": 1 } } } ] } },
+      "options": { "reduceOptions": { "calcs": ["last"], "fields": "all" }, "colorMode": "background", "graphMode": "none" }
+    },
+    {
+      "type": "gauge",
+      "title": "Temperature (°C)",
+      "gridPos": { "x": 16, "y": 0, "w": 8, "h": 7 },
+      "targets": [
+        { "query": "from(bucket: \"cnc\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r[\"_measurement\"] == \"cnc_telemetry\") |> filter(fn: (r) => r[\"_field\"] == \"bearing_temp_c\") |> last()", "refId": "A" }
+      ],
+      "fieldConfig": { "defaults": { "min": 0, "max": 100, "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "#EAB308", "value": 60 }, { "color": "red", "value": 75 } ] } } },
+      "options": { "reduceOptions": { "calcs": ["last"], "fields": "" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Production Rate (parts/min)",
+      "gridPos": { "x": 0, "y": 7, "w": 8, "h": 7 },
+      "targets": [
+        { "query": "from(bucket: \"cnc\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r[\"_measurement\"] == \"cnc_telemetry\") |> filter(fn: (r) => r[\"_field\"] == \"production_rate\")", "refId": "A" }
+      ],
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "green" } } },
+      "options": { "legend": { "displayMode": "hidden" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Cycle Time (s)",
+      "gridPos": { "x": 8, "y": 7, "w": 8, "h": 7 },
+      "targets": [
+        { "query": "from(bucket: \"cnc\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r[\"_measurement\"] == \"cnc_telemetry\") |> filter(fn: (r) => r[\"_field\"] == \"cycle_time_s\")", "refId": "A" }
+      ],
+      "fieldConfig": { "defaults": { "custom": { "drawStyle": "bars", "fillOpacity": 100 }, "color": { "mode": "fixed", "fixedColor": "blue" } } },
+      "options": { "legend": { "displayMode": "hidden" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Vibration (mm/s)",
+      "gridPos": { "x": 16, "y": 7, "w": 8, "h": 7 },
+      "targets": [
+        { "query": "from(bucket: \"cnc\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r[\"_measurement\"] == \"cnc_telemetry\") |> filter(fn: (r) => r[\"_field\"] == \"vibration_rms\")", "refId": "A" }
+      ],
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "yellow" } } },
+      "options": { "legend": { "displayMode": "hidden" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Spindle Speed History (RPM)",
+      "gridPos": { "x": 0, "y": 14, "w": 12, "h": 8 },
+      "targets": [
+        { "query": "from(bucket: \"cnc\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r[\"_measurement\"] == \"cnc_telemetry\") |> filter(fn: (r) => r[\"_field\"] == \"spindle_rpm\")", "refId": "A" }
+      ],
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "cyan" } } },
+      "options": { "legend": { "calcs": ["min", "max", "mean", "last"], "displayMode": "table", "placement": "bottom" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Bearing Temperature History (°C)",
+      "gridPos": { "x": 12, "y": 14, "w": 12, "h": 8 },
+      "targets": [
+        { "query": "from(bucket: \"cnc\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r[\"_measurement\"] == \"cnc_telemetry\") |> filter(fn: (r) => r[\"_field\"] == \"bearing_temp_c\")", "refId": "A" }
+      ],
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "orange" } } },
+      "options": { "legend": { "calcs": ["min", "max", "mean", "last"], "displayMode": "table", "placement": "bottom" } }
+    },
+    {
+      "type": "table",
+      "title": "Machine Event Logs",
+      "gridPos": { "x": 0, "y": 22, "w": 24, "h": 8 },
+      "targets": [
+        { "query": "from(bucket: \"cnc\") |> range(start: v.timeRangeStart, stop: v.timeRangeStop) |> filter(fn: (r) => r[\"_measurement\"] == \"cnc_telemetry\") |> filter(fn: (r) => r[\"_field\"] == \"event_type\" or r[\"_field\"] == \"machine_status\") |> pivot(rowKey:[\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\") |> keep(columns: [\"_time\", \"event_type\", \"machine_status\"]) |> sort(columns: [\"_time\"], desc: true)", "refId": "A" }
+      ],
+      "fieldConfig": {
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "event_type" },
+            "properties": [
+              { "id": "custom.cellOptions", "value": { "type": "color-background" } },
+              { "id": "mappings", "value": [ { "type": "value", "options": { "Warning": { "color": "orange", "index": 0 }, "Machine Running": { "color": "transparent", "index": 1 } } } ] }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

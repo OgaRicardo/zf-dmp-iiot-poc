@@ -1,45 +1,70 @@
 import snap7
-import time
 import struct
-import ctypes  # <-- Biblioteca nativa para lidar com memória de hardware
+import time
+import ctypes
+import random
 
-# Tenta descobrir dinamicamente como a sua versão do snap7 chama a área DB
-try:
-    AREA_DB = snap7.types.SrvArea.DB
-except AttributeError:
-    try:
-        AREA_DB = snap7.type.SrvArea.DB
-    except AttributeError:
-        AREA_DB = snap7.types.srvAreaDB
+print("Inicializando o Servidor CLP Virtual (Siemens 840D)...")
 
-# Cria o Servidor (Finge ser a CPU do CLP)
 server = snap7.server.Server()
-server.start()
+size = 100
+DB_NUMBER = 1
+db_data = (ctypes.c_byte * size)()
 
-# ⚠️ O SEGREDO ESTÁ AQUI: Criamos um bloco de memória C real (1024 bytes)
-db1_data = (ctypes.c_uint8 * 1024)()
-
-# Registramos a DB no servidor APENAS UMA VEZ
-server.register_area(AREA_DB, 1, db1_data)
-
-print("🟢 CLP Virtual S7-300 Rodando na porta 102...")
-
-# Fica rodando e atualizando a memória continuamente
+# Blindagem de versão do S7
 try:
-    temperatura = 45.0
-    
+    from snap7.type import srvArea
+    area = srvArea.DB
+    server.register_area(area, DB_NUMBER, db_data)
+except Exception:
+    try:
+        from snap7.types import srvAreaDB
+        server.register_area(srvAreaDB, DB_NUMBER, db_data)
+    except Exception:
+        class AreaWrapper:
+            value = 5
+        server.register_area(AreaWrapper(), DB_NUMBER, db_data)
+
+server.start(tcp_port=102)
+
+print("✅ CLP Virtual rodando na porta 102 (IP: 127.0.0.1)")
+print("Pressione Ctrl+C para parar.")
+
+# Variáveis para simulação física realista (Curva Assintótica)
+temperatura_atual = 40.0
+temperatura_alvo = 80.0
+aquecendo = True
+
+try:
     while True:
-        # Simula a temperatura subindo aos poucos
-        temperatura += 0.5
-        if temperatura > 80.0:
-            temperatura = 45.0
+        # Lógica de aquecimento/resfriamento arredondada
+        if aquecendo:
+            # Aquece rápido no início, perde força perto do topo (Inércia térmica)
+            incremento = (temperatura_alvo - temperatura_atual) * 0.05
+            temperatura_atual += incremento + random.uniform(-0.3, 0.4)
             
-        # Altera o valor diretamente na memória física (DB1, Byte 0)
-        # O servidor S7Comm vai transmitir automaticamente qualquer mudança feita aqui!
-        struct.pack_into('>f', db1_data, 0, temperatura)
+            if temperatura_atual >= 78.0: 
+                aquecendo = False
+                temperatura_alvo = 45.0
+        else:
+            # Esfria rápido, estabiliza embaixo
+            decremento = (temperatura_atual - temperatura_alvo) * 0.05
+            temperatura_atual -= decremento + random.uniform(-0.2, 0.5)
+            
+            if temperatura_atual <= 48.0: 
+                aquecendo = True
+                temperatura_alvo = 80.0
+                
+        # Proteção para não vazar a temperatura
+        temperatura_atual = max(35.0, min(85.0, temperatura_atual))
+
+        dado_em_bytes = struct.pack('>f', temperatura_atual)
+        for i in range(4):
+            db_data[i] = dado_em_bytes[i]
         
         time.sleep(1)
 
 except KeyboardInterrupt:
-    print("🔴 CLP Virtual Desligado.")
+    print("\nDesligando CLP Virtual...")
     server.stop()
+    server.destroy()
